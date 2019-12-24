@@ -1,0 +1,2 @@
+# Notes
+Docker and kubernetes

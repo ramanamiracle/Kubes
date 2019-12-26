@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-busybox
+  labels:
+    run: nginx-busybox
+    app: nginx-busybox
+    env: iat
+  annotations:
+    owner: 'Ramana'
+    email: 'ramana.yampala@gmail.com'  
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+    ports:
+      - containerPort: 80
+  - image: busybox
+    name: busybox
+    command: ["sleep", "100"]
+  restartPolicy: Never

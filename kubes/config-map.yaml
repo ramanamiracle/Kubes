@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: samples-configmap
+data:
+  my.name: "Ramana"
+  my.email: "ramana.yampala@gmail.com"

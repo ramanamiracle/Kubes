@@ -1,0 +1,307 @@
+################################   kubectl basic commands  #######################################
+
+kubectl --version
+kubectl version --short
+kubectl cluster-info
+
+kubectl get nodes -o wide
+kubectl get events  
+kubectl cordon worker2.example.com
+#worker2.example.com   Ready,SchedulingDisabled
+kubectl uncordon worker2.example.com
+
+kubectl drain worker2.example.com
+#worker2.example.com   Ready,SchedulingDisabled
+#pod/ngnix-595c5d5495-l628h evicted
+kubectl uncordon worker2.example.com
+
+kubectl api-resources
+kubectl api-resources -o wide
+kubectl api-resources --namespaced=true 
+
+kubectl get componentstatus
+kubectl get cs
+kubectl explain deployment.spec
+
+kubectl config view
+kubectl config current-context
+kubectl config get-contexts
+kubectl config use-context develop
+
+kubectl auth can-i list deployment --as=tiller
+kubectl auth can-i list deployment
+kubectl auth can-i list deployment
+kubectl auth can-i list deployment --as=kubernetes-admin
+
+kubectl get ns
+kubectl get namespaces
+kubectl get all -n kube-system
+
+kubectl proxy --port 8080
+kubectl proxy --address 0.0.0.0 --accept-hosts '.*'
+
+kubectl get all -n kube-system -o wide
+
+kubectl get --raw '/apis/'
+kubectl get --raw '/apis/metrics.k8s.io/'
+kubectl get pods --v=9
+
+
+################################   kubectl run pod/job/cronjob  ##########################
+
+## kubectl running pod ##
+
+kubectl run --generator="run-pod/v1" nginx --image=nginx
+kubectl run nginx --restart=Never --image=nginx
+kubectl run --restart=Never -it busybox --image=busybox -- sh
+kubectl exec busybox -c busybox -- ls /
+
+kubectl label pods nginx env=develop
+kubectl annotate pods nginxx email=some@some.com
+
+kubectl run sample --restart=Never --image=busybox --dry-run -o yaml > pod.yaml
+kubectl port-forward --address 0.0.0.0 pod/nginx 8000:80
+
+kubectl logs -l run=nginx 
+kubectl logs nginx-6db489d4b7-x5k9n --previous
+kubectl logs ngnix-595c5d5495-76rmc -c ngnix
+
+kubectl run nginx --restart=Never --image=nginx --dry-run -o yaml
+kubectl get pods -o wide --show-labels -l env=dev,run=nginx
+
+## kubectl running job ##
+kubectl run nginx --restart=OnFailure --image=busybox -- sleep 100
+kubectl exec -it nginx-9fs84 sh
+kubectl get jobs
+kubectl describe job nginx
+kubectl describe pod nginx-9fs84
+
+# job yaml file
+kubectl create -f countdown-jobs.yaml
+kubectl get jobs
+kubectl get po
+kubectl describe jobs countdown
+
+## kubectl running cronjob ##
+kubectl run cj --schedule="*/5 * * * *" --restart=OnFailure --image=busybox -- /bin/sh -c "date; echo 'ended'"
+kubectl run --generator=run-pod/v1 hello --schedule="*/1 * * * *" --restart=OnFailure --image=busybox -- /bin/sh -c "date; echo Hello from the Kubernetes cluster"
+
+kubectl get jobs --watch
+kubectl logs pod/cj-1577162160-qqg2w
+kubectl delete cronjob.batch/cj
+
+# cronjob yaml file
+kubectl create -f cronjob.yaml
+kubectl get cronjobs
+kubectl get jobs
+kubectl get po
+kubectl describe jobs sample-cron
+
+## node labels
+kubectl label node kmaster fast=true
+
+## node taint
+kubectl taint node kmaster key=value:taint-effect
+# taint-effect --> NoSchedule | PreferNoSchedule | NoExecute
+
+kubectl taint node kmaster app=blue:NoSchedule
+
+
+################################   kubectl configmaps & secrets   ##########################
+
+## config map from files
+echo -n 'env=prod' > env.txt
+echo -n 'count=2' > count.txt
+
+kubectl create configmap some-config --from-file=env.txt --from-file=count.txt
+
+kubectl get configmaps
+kubectl describe configmaps some-config
+
+kubectl create -f nginx-pod-configmap-vol.yaml
+kubectl exec nginx-pod-configmap-vol ls /etc/data
+
+## config map from literal values
+kubectl create configmap redis-configmap-env --from-literal=key1=value1 --from-literal=key2=value2
+
+kubectl create -f redis-pod-configmap-env.yaml
+kubectl exec redis-pod-configmap-env env | grep key
+
+## creating secrets from kubectl
+
+kubectl create secret generic app-secret --from-literal=DB_Host=mysql --from-literal=DB_User=root
+
+echo -n 'admin' > username.txt
+echo -n 'pa$$w00rd' > password.txt
+
+kubectl create secret generic nginx-secret-vol --from-file=username.txt --from-file=password.txt
+kubectl get secrets
+kubectl describe secrets nginx-secret-vol
+
+kubectl create -f nginx-pod-secret-vol.yaml
+kubectl exec nginx-pod-secret-vol ls /etc/confidential
+
+## creating secrets from yaml file
+echo -n 'admin' | base64
+echo -n 'pa$$w00rd' | base64
+
+kubectl create -f redis-secret-env.yaml
+kubectl get secret
+kubectl describe secret redis-secret-env
+
+kubectl create -f redis-pod-secret-env.yaml
+kubectl exec redis-pod-secret-env env | grep SECRET
+
+
+################################   kubectl replicaset & deployments   ##########################
+
+## Replication Controller ##
+kubectl create -f nginx-rc.yaml
+kubectl get po -o wide --watch
+kubectl get po -l app=nginx-app
+kubectl get rc nginx-rc
+kubectl describe rc nginx-rc
+
+kubectl scale rc nginx-rc --replicas=5
+kubectl delete -f nginx-rc.yaml
+
+## ReplicaSet ##
+
+kubectl create -f nginx-rs.yaml
+kubectl get po -o wide
+kubectl get po -l app=nginx-app
+kubectl get rs nginx-rs -o wide
+kubectl describe rs nginx-rs
+
+kubectl scale rs nginx-rs --replicas=5
+kubectl delete -f nginx-rs.yaml
+
+
+## Deployment ##
+
+kubectl run nginx --image=nginx
+kubectl create deployment nginx --image=nginx
+kubectl get pods -o wide --show-labels
+kubectl get deployments -o wide
+kubectl get rs -o wide
+
+kubectl describe rs nginx-6db489d4b7
+
+kubectl scale --replicas=3 deploy/nginx
+
+kubectl autoscale deployment nginx --min=2 --max=10
+#horizontalpodautoscaler.autoscaling/nginx autoscaled
+
+kubectl set image deploy/nginx nginx=nginx:1.17.6
+kubectl rollout status deploy/nginx
+kubectl rollout history deploy/ngin
+kubectl rollout undo deploy/nginx
+kubectl rollout undo deploy/nginx --to-revision=1
+
+# deployment yaml file
+kubectl create -f nginx-deploy.yaml 
+kubectl get deploy -l app=nginx-app
+kubectl get rs -l app=nginx-app
+kubectl get po -l app=nginx-app
+kubectl describe deploy nginx-deploy
+
+kubectl set image deploy nginx-deploy nginx-container=nginx:1.91 --record
+kubectl rollout status deployment/nginx-deploy
+kubectl rollout history deployment/nginx-deploy
+kubectl rollout undo deployment/nginx-deploy
+kubectl rollout status deployment/nginx-deploy
+kubectl describe deploy nginx-deploy | grep -i image
+
+kubectl scale deployment nginx-deploy --replicas=5
+
+
+################################   DaemonSet & Statefulset  ##########################
+
+kubectl create -f fluentd-ds-allnodes.yaml
+kubectl get po -o wide
+kubectl get ds
+kubectl describe ds fluentd-ds
+
+kubectl get nodes
+kubectl label nodes worker1 worker2 disktype=ssd
+kubectl get nodes --show-labels
+
+kubectl create -f nginx-daemonset.yaml
+kubectl get po -o wide
+kubectl get ds
+kubectl describe ds nginx-ds
+
+################################  Services (ClusterIp, NodePort, LoadBalancer)   ##########################
+
+kubectl get svc
+
+kubectl expose pod httpd --name=nginx-svc --type=NodePort --port=80
+kubectl expose rc nginx --port=80 --target-port=8000
+kubectl delete svc nginx-svc
+
+kubectl expose deploy nginx-deploy --name=nginx-svc --type=LoadBalancer --port=80 --target-port=80
+kubectl expose deploy nginx-deploy --name=nginx-svc --type=ClusterIp --port=80 --target-port=80
+
+
+## ClusterIp
+# yaml file
+kubectl create -f nginx-deploy.yaml
+kubectl create -f nginx-svc-cip.yaml
+kubectl get pod -l app=nginx-app
+kubectl get deploy -l app=nginx-app 
+kubectl get service -l app=nginx-app
+kubectl describe service my-service
+
+# from swith in cluster
+curl http://clusterip:port
+
+
+## NodePort
+# yaml file
+kubectl create -f nginx-deploy.yaml
+kubectl create -f nginx-svc.yaml
+kubectl get service -l app=nginx-app
+kubectl get svc -l app=nginx-app
+kubectl get po -o wide
+kubectl describe svc my-service
+
+curl http://[POD-IP]
+
+#from external
+http://nodep-ip:nodePort
+
+
+## LoadBalancer
+
+kubectl create -f nginx-deploy.yaml
+kubectl create -f nginx-svc-lb.yaml
+kubectl get pod -l app=nginx-app
+kubectl get deploy -l app=nginx-app 
+kubectl get service -l app=nginx-app
+kubectl describe service my-service
+
+# Using load-balancer-ip
+http://load-balancer-ip
+
+# Using nodePorts
+http://nodeip:nodeport
+
+
+
+################################  Storage, PV & PVC  ##########################
+
+## emptyDir
+kubectl create -f nginx-emptydir.yaml
+kubectl get po -o wide
+kubectl exec nginx-emptydir df /test-mnt
+kubectl describe pod nginx-emptydir
+
+## hostPath
+
+kubectl create -f nginx-hostpath.yaml
+kubectl get po
+kubectl exec nginx-hostpath df /test-mnt
+
+kubectl delete po nginx-hostpath
+kubectl get po
+ls /test-vol

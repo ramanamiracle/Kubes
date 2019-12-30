@@ -51,22 +51,27 @@ kubectl get pods --v=9
 
 ## kubectl running pod ##
 
+# Restart Policies --> Never | Always | OnFailure
+
+# client side dry run & server side dry run
+kubectl run sample --restart=Never --image=busybox --dry-run -o yaml > pod.yaml
+kubectl run sample --restart=Never --image=busybox --server-dry-run -o yaml > pod.yaml
+kubectl diff -f pod.yaml
+
 kubectl run --generator="run-pod/v1" nginx --image=nginx
 kubectl run nginx --restart=Never --image=nginx
 kubectl run --restart=Never -it busybox --image=busybox -- sh
 kubectl exec busybox -c busybox -- ls /
 
 kubectl label pods nginx env=develop
-kubectl annotate pods nginxx email=some@some.com
+kubectl annotate pods nginx email=some@some.com
 
-kubectl run sample --restart=Never --image=busybox --dry-run -o yaml > pod.yaml
 kubectl port-forward --address 0.0.0.0 pod/nginx 8000:80
 
 kubectl logs -l run=nginx 
 kubectl logs nginx-6db489d4b7-x5k9n --previous
 kubectl logs ngnix-595c5d5495-76rmc -c ngnix
 
-kubectl run nginx --restart=Never --image=nginx --dry-run -o yaml
 kubectl get pods -o wide --show-labels -l env=dev,run=nginx
 
 ## kubectl running job ##
@@ -106,6 +111,8 @@ kubectl taint node kmaster key=value:taint-effect
 
 kubectl taint node kmaster app=blue:NoSchedule
 
+## Readiness & Liveliness probes
+# Probe handlers --> http , tcp or arbitrary exec
 
 ################################   kubectl configmaps & secrets   ##########################
 
@@ -217,6 +224,7 @@ kubectl scale deployment nginx-deploy --replicas=5
 
 ################################   DaemonSet & Statefulset  ##########################
 
+## DaemonSet
 kubectl create -f fluentd-ds-allnodes.yaml
 kubectl get po -o wide
 kubectl get ds
@@ -226,10 +234,13 @@ kubectl get nodes
 kubectl label nodes worker1 worker2 disktype=ssd
 kubectl get nodes --show-labels
 
-kubectl create -f nginx-daemonset.yaml
+kubectl create -f nginx-ds-subsetnodesss.yaml
 kubectl get po -o wide
 kubectl get ds
 kubectl describe ds nginx-ds
+
+## Statefulset
+
 
 ################################  Services (ClusterIp, NodePort, LoadBalancer)   ##########################
 
@@ -297,7 +308,6 @@ kubectl exec nginx-emptydir df /test-mnt
 kubectl describe pod nginx-emptydir
 
 ## hostPath
-
 kubectl create -f nginx-hostpath.yaml
 kubectl get po
 kubectl exec nginx-hostpath df /test-mnt
@@ -305,3 +315,11 @@ kubectl exec nginx-hostpath df /test-mnt
 kubectl delete po nginx-hostpath
 kubectl get po
 ls /test-vol
+
+## nfs
+kubectl create -f pv-nfs.yaml
+kubectl create -f pvc-nfs.yaml
+
+kubectl get pv,pvc
+
+kubectl create -f nfs-nginx.yaml

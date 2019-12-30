@@ -316,6 +316,9 @@ kubectl delete po nginx-hostpath
 kubectl get po
 ls /test-vol
 
+# ReclaimPolicy --> Retain | Recycle | delete
+# Access Mode --> RWO | RWM | RO
+
 ## nfs
 kubectl create -f pv-nfs.yaml
 kubectl create -f pvc-nfs.yaml

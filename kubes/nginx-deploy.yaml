@@ -5,7 +5,7 @@ metadata:
   labels:
     app: nginx-app
 spec:
-  replicas: 3
+  replicas: 3  
   template:
     metadata:
       labels:

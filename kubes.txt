@@ -37,6 +37,9 @@ kubectl get ns
 kubectl get namespaces
 kubectl get all -n kube-system
 
+kubectl get quota -n default
+kubectl get limitrange -n default 
+
 kubectl proxy --port 8080
 kubectl proxy --address 0.0.0.0 --accept-hosts '.*'
 
@@ -146,7 +149,7 @@ kubectl get secrets
 kubectl describe secrets nginx-secret-vol
 
 kubectl create -f nginx-pod-secret-vol.yaml
-kubectl exec nginx-pod-secret-vol ls /etc/confidential
+kubectl exec nginx-pod-secret-vol ls /app/cred
 
 ## creating secrets from yaml file
 echo -n 'admin' | base64
@@ -215,6 +218,7 @@ kubectl describe deploy nginx-deploy
 kubectl set image deploy nginx-deploy nginx-container=nginx:1.91 --record
 kubectl rollout status deployment/nginx-deploy
 kubectl rollout history deployment/nginx-deploy
+kubectl rollout history deploy nginx-deploy --revision=4
 kubectl rollout undo deployment/nginx-deploy
 kubectl rollout status deployment/nginx-deploy
 kubectl describe deploy nginx-deploy | grep -i image

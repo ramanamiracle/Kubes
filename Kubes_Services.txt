@@ -1,0 +1,51 @@
+Users (clients)
+
+Services:
+NodePort
+w1(pod1): 31234, w2: 31234, w3: 31234, w3: 31234, w5: 31234
+
+AWS
+LoadBalancer ->  LB - ALB/ELB (VIP) --> w1:31234,w2:3123,w3:3123
+
+ClusterIp
+
+Ingress
+F5: VIP (11.11.11.12) -->  n1:443, n2:80
+
+--------------------- Ingress (nodeport: 31111)  -----------------------
+
+Ingress controller (nginx -2) - Deployment (nodeSelector --> proxy=true): Host -> service
+
+deploy = frontend (deploymnet - 10 pods) - service ( NodePort --> 31234)
+
+frontend (react, angular, web application) 
+nginx, apache  --> 80, 443
+/var/www/html/index.html --> app:8080/login.jsp
+
+
+deploy= backend (deployment - 10 pods) - service (ClusterIP - IP)
+application (java, python, node.js )  --> 8080, 5000
+java, python(flask/django), node.js
+
+
+deploy= db (statefulset - 3) pod-0(rw), pod-1(ro), pod-2(ro) - service(ClusterIP - IP)
+database: 9121, 3256, 27001
+oracle, mssql, mysql, nosql, mognodb
+
+----------------------------------------------------------------------
+DNS - shoes.com --> VIP (20.0.0.1)
+F5 LB - VIP (20.0.0.1) (http: 80) (Algorith) --> V1, Vm2, Vm3, vm4, vm5
+
+DNS - shoes.com --> 11.1.1.1:80/443
+SW LB(Nginx, HAProxy) - 11.1.1.1 - (shoes.com/main) --> V1, Vm2, Vm3, vm4, vm5
+
+Rules:
+shoes.com/green --> vm1,vm2,Vm3
+in.shoes.
+
+nignx1          nginx2      nignx3          nignx4      nignx5
+VM1(10.0.0.1) VM2(10.0.0.2) VM3(10.0.0.3) VM4(10.0.0.4) VM5(10.0.0.5)
+
+Rules:
+shoes.com/green --> frontend-svc
+other.com --> f1-svc

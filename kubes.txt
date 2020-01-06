@@ -330,3 +330,41 @@ kubectl create -f pvc-nfs.yaml
 kubectl get pv,pvc
 
 kubectl create -f nfs-nginx.yaml
+
+
+################################# Metric server ########################################
+
+wget https://get.helm.sh/helm-v3.0.2-linux-amd64.tar.gz
+tar -xvzf helm-v3.0.2-linux-amd64.tar.gz
+sudo mv linux-amd64/helm /usr/local/bin/helm
+
+helm repo add stable https://kubernetes-charts.storage.googleapis.com
+helm inspect values stable/metrics-server > metrics-server.values
+helm show values stable/metrics-server > metrics-server.values
+
+# edit metrics-server.values
+enabled: true
+args:
+ - --kubelet-insecure-tls
+
+helm install metrics-server stable/metrics-server --namespace kube-system --values metrics-server.values
+
+kubectl get --raw "/apis/metrics.k8s.io/v1beta1/nodes"
+
+kubectl top nodes
+kubectl top pods
+
+################################# Ingress nginx #########################################
+
+helm install ingress-nginx stable/nginx-ingress --set rbac.create=true
+kubectl get all -o wide
+
+#########################################################################################
+
+
+################################# Metal LB #########################################
+
+kubectl apply -f https://raw.githubusercontent.com/google/metallb/v0.8.3/manifests/metallb.yaml
+kubect apply -f layer2-cm.yaml
+
+#########################################################################################

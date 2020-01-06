@@ -12,7 +12,7 @@ spec:
       - name: nginx-container
         image: nginx
       nodeSelector:
-        disktype: ssd
+        type: app
   selector:
     matchLabels:
       name: nginx

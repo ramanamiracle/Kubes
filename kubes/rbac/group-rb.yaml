@@ -1,0 +1,12 @@
+kind: RoleBinding
+metadata:
+  name: sample-rolebinding
+  namespace: sample
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: john-sample
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: sample

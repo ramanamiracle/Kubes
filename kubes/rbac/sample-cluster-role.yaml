@@ -1,0 +1,13 @@
+kind: ClustorRole
+metadata:
+  name: john-cluster-sample
+  namespace: default
+rules:
+- apiGroups:
+  - "" # indicates core api group
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch

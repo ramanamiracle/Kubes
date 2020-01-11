@@ -256,6 +256,7 @@ kubectl delete svc nginx-svc
 
 kubectl expose deploy nginx-deploy --name=nginx-svc --type=LoadBalancer --port=80 --target-port=80
 kubectl expose deploy nginx-deploy --name=nginx-svc --type=ClusterIp --port=80 --target-port=80
+kubectl expose deploy nginx-deploy --name=nginx-svc --type=NodePort --port=80
 
 
 ## ClusterIp
@@ -320,8 +321,8 @@ kubectl delete po nginx-hostpath
 kubectl get po
 ls /test-vol
 
-# ReclaimPolicy --> Retain | Recycle | delete
-# Access Mode --> RWO | RWM | RO
+# ReclaimPolicy (persistentVolumeReclainPolicy)--> Retain | Recycle | delete
+# Access Mode (accessModes) --> RWO | RWM | ROM
 
 ## nfs
 kubectl create -f pv-nfs.yaml
@@ -334,11 +335,6 @@ kubectl create -f nfs-nginx.yaml
 
 ################################# Metric server ########################################
 
-wget https://get.helm.sh/helm-v3.0.2-linux-amd64.tar.gz
-tar -xvzf helm-v3.0.2-linux-amd64.tar.gz
-sudo mv linux-amd64/helm /usr/local/bin/helm
-
-helm repo add stable https://kubernetes-charts.storage.googleapis.com
 helm inspect values stable/metrics-server > metrics-server.values
 helm show values stable/metrics-server > metrics-server.values
 
@@ -359,12 +355,169 @@ kubectl top pods
 helm install ingress-nginx stable/nginx-ingress --set rbac.create=true
 kubectl get all -o wide
 
-#########################################################################################
 
-
-################################# Metal LB #########################################
+################################# Metal LB #############################################
 
 kubectl apply -f https://raw.githubusercontent.com/google/metallb/v0.8.3/manifests/metallb.yaml
-kubect apply -f layer2-cm.yaml
+kubectl apply -f layer2-cm.yaml
 
-#########################################################################################
+kubectl get all -n metallb-system -o wide
+
+
+################################## RBAC ##################################################
+
+----------------------
+### Rules:
+apiGroups:
+  - core apigroup = ""
+  - extensions
+  - apps 
+  - networking
+  - etc.,
+resources:
+  - pods
+  - deployments
+  - replicaset
+  - etc.,
+verbs:
+  - get, list
+  - watch, updated
+  - delete
+  - etc.,
+-------------------------
+
+kubectl create ns sample
+
+## create user private key
+openssl genrsa -out john.key 2048  # john.key
+
+## create certificate signing request
+openssl req -new -key john.key -out john.csr -subj "/CN=john/O=sample" # john.csr
+
+## Sign csr using CA 
+#/etc/kubernets/pki --> ca.crt and ca.key
+sudo openssl x509 -req -in john.csr -CA /etc/kubernetes/pki/ca.crt -CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out john.crt -days 365
+
+## create kubeconfig 
+# set cluster
+kubectl --kubeconfig john.kubeconfig config set-cluster kubernetes --server https://172.42.42.100:6443 --certificate-authority=ca.crt
+
+# set user credentials
+kubectl --kubeconfig john.kubeconfig config set-credentials john --client-certificate john.crt --client-key john.key
+
+# set context
+kubectl --kubeconfig john.kubeconfig config set-context john-kubernets --cluster kubernetes --namespace sample --user john
+
+# set current context and check access
+kubectl --kubeconfig john.kubeconfig get pods
+
+# create Role
+kubectl create role john-sample --resource=pods --verb=get,list --namespace sample
+kubectl get roles -n sample
+
+# create rolebinding - user level
+kubectl create rolebinding john-sample-rolebinding --role=john-sample --user=john --namespace sample
+kubectl get rolebinding -n sample
+
+## create rolebinding - group level
+#kubectl create rolebinding sample-rolebinding --role=john-sample --group=sample --namespace sample
+
+# Access pods now 
+kubectl --kubeconfig john.kubeconfig get pods
+
+kubectl auth can-i list pods --namespace default
+kubectl auth can-i list pods --namespace default --as john
+kubectl get pods --as john
+
+# csr requst yaml
+kubectl create -f signing-request.yaml
+kubectl get csr
+
+# approve aboce csr with admin
+kubectl certificate approve john-csr
+kubectl get csr
+
+# Gather the crt from the above csr and base64 decode --> john.csr
+kubectl get csr john-csr -o yaml
+kubectl get csr john-csr -o json
+
+############################### Service accounts ############################################
+
+# get the token from default secret in any namespace
+kubectl get secrets default-token-zbv4l -o yaml
+
+curl -X GET --cacert ca.crt --header "Authorization: Bearer $token" https://172.42.42.100:6443/version
+
+kubectl get serviceaccounts
+kubectl get svc
+
+/var/run/secrets/kubernetes.io/
+/tmp/secrets/kubernetes.io/serviceaccount
+token, namespace, ca.cert
+
+curl -X GET --cacert ca.crt --header "Authorization: Bearer $token" https://172.42.42.100:6443/api/v1/namespaces/default/services
+ "message": "services is forbidden: User \"system:serviceaccount:default:default\" cannot list resource \"services\" in API group \"\" in the namespace \"default\""
+
+# Giving view access to default service account
+kubectl create rolebinding default-view --clusterrole=view --serviceaccount=default:default --namespace=default
+curl -X GET --cacert ca.crt --header "Authorization: Bearer $token" https://172.42.42.100:6443/api/v1/namespaces/default/services
+
+
+########################################### Helm #################################################
+wget https://get.helm.sh/helm-v2.16.1-linux-amd64.tar.gz
+sudo mv helm /usr/local/bin
+
+Service Account : tiller
+Cluster Rolebinding: cluster-admin
+
+kubectl create serviceaccount tiller -n kube-system
+kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+helm init --service-account tiller
+
+
+helm repo list
+helm repo update
+
+
+helm search jenkins
+helm inspect stable/jenkins
+helm fetch stable/jenkins
+
+helm install stable/jenkins
+helm status stable/jenkins
+helm list
+helm status trendsetting-mongoose
+helm delete trendsetting-mongoose
+
+helm upgrade
+helm rollback
+helm delete --purge
+
+
+# To remove helm/tiller
+# helm reset [--force] [--remove-helm-home]
+
+helm install --values --name
+
+## helm2 to helm3
+helm install stable/phpmyadmin --name phpmyadmin
+
+wget https://get.helm.sh/helm-v3.0.2-linux-amd64.tar.gz
+tar -xvzf helm-v3.0.2-linux-amd64.tar.gz
+sudo mv linux-amd64/helm /usr/local/bin/helm
+
+#helm3 repo add stable https://kubernetes-charts.storage.googleapis.com
+
+helm3 plugin list
+helm3 plugin install https://github.com/helm/helm-2to3
+helm3 2to3 help
+helm3 2to3 move config
+
+helm3 2to3 convert phpmyadmin
+
+# removes tiller and move the releases
+helm3 2to3 cleanup
+
+helm3 uninstall phpmyadmin
+hel3 search repo phpmyadmin
+helm3 install phpmyadmin stable/phpmyadmin

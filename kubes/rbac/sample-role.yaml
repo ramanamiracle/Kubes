@@ -1,0 +1,15 @@
+kind: Role
+metadata:
+  name: john-sample
+  namespace: default
+rules:
+- apiGroups:
+  - "" # indicates core api group
+  resources:
+  - pods
+  - services
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch

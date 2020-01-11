@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: john-sample-cluster-roleninding
+  namespace: sample
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: john-cluster-sample
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: john

@@ -521,3 +521,26 @@ helm3 2to3 cleanup
 helm3 uninstall phpmyadmin
 hel3 search repo phpmyadmin
 helm3 install phpmyadmin stable/phpmyadmin
+
+## Creting helm charts
+helm3 install  my-nginx .
+# helm2 install --name my-nginx .
+helm3 upgrade my-nginx .
+helm3 rollback my-nginx 1
+helm3 rollback my-nginx 2
+
+helm3 uninstall my-nginx
+
+helm3 install my-nginx . --set replicaCount=2
+helm3 upgrade my-nginx . --set replicaCount=2
+
+helm3 inspect values .
+helm3 inspect values . >/tmp/my-nginx.values
+
+helm3 install my-nginx . --values /tmp/my-nginx.values
+helm3 upgrade my-nginx . --values /tmp/my-nginx.values
+
+# helm create directory structure
+helm3 create myapp
+
+helm3 package my-nginx -->  /home/vagrant/my-nginx-0.2.0.tgz

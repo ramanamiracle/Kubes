@@ -34,7 +34,7 @@ oracle, mssql, mysql, nosql, mognodb
 
 ----------------------------------------------------------------------
 DNS - shoes.com --> VIP (20.0.0.1)
-F5 LB - VIP (20.0.0.1) (http: 80) (Algorith) --> V1, Vm2, Vm3, vm4, vm5
+F5 LB - VIP (20.0.0.1) (http: 80) (Algorithm) --> V1, Vm2, Vm3, vm4, vm5
 
 DNS - shoes.com --> 11.1.1.1:80/443
 SW LB(Nginx, HAProxy) - 11.1.1.1 - (shoes.com/main) --> V1, Vm2, Vm3, vm4, vm5

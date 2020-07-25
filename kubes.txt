@@ -17,7 +17,10 @@ kubectl uncordon worker2.example.com
 
 kubectl api-resources
 kubectl api-resources -o wide
-kubectl api-resources --namespaced=true 
+kubectl api-resources --namespaced=true
+
+kubectl api-versions
+kubectl get apiservice
 
 kubectl get componentstatus
 kubectl get cs
@@ -321,7 +324,7 @@ kubectl delete po nginx-hostpath
 kubectl get po
 ls /test-vol
 
-# ReclaimPolicy (persistentVolumeReclainPolicy)--> Retain | Recycle | delete
+# ReclaimPolicy (persistentVolumeReclaimPolicy) --> Retain | Recycle | delete
 # Access Mode (accessModes) --> RWO | RWM | ROM
 
 ## nfs
@@ -339,7 +342,9 @@ helm inspect values stable/metrics-server > metrics-server.values
 helm show values stable/metrics-server > metrics-server.values
 
 # edit metrics-server.values
-enabled: true
+hostNetwork:
+  enabled: true
+
 args:
  - --kubelet-insecure-tls
 
@@ -349,6 +354,13 @@ kubectl get --raw "/apis/metrics.k8s.io/v1beta1/nodes"
 
 kubectl top nodes
 kubectl top pods
+
+kubectl api-resources
+nodes                                          metrics.k8s.io                 false        NodeMetrics
+pods                                           metrics.k8s.io                 true         PodMetrics
+
+kubectl get apiservices
+v1beta1.metrics.k8s.io                 kube-system/metrics-server   True        9m5s
 
 ################################# Ingress nginx #########################################
 
@@ -369,7 +381,7 @@ kubectl get all -n metallb-system -o wide
 ----------------------
 ### Rules:
 apiGroups:
-  - core apigroup = ""
+  - "" [= core apigroup]
   - extensions
   - apps 
   - networking
@@ -433,7 +445,7 @@ kubectl get pods --as john
 kubectl create -f signing-request.yaml
 kubectl get csr
 
-# approve aboce csr with admin
+# approve above csr with admin
 kubectl certificate approve john-csr
 kubectl get csr
 
@@ -497,7 +509,7 @@ helm delete --purge
 # To remove helm/tiller
 # helm reset [--force] [--remove-helm-home]
 
-helm install --values --name
+helm install <repo>/<package> --name --values <values.yaml>
 
 ## helm2 to helm3
 helm install stable/phpmyadmin --name phpmyadmin
@@ -544,3 +556,31 @@ helm3 upgrade my-nginx . --values /tmp/my-nginx.values
 helm3 create myapp
 
 helm3 package my-nginx -->  /home/vagrant/my-nginx-0.2.0.tgz
+
+## local repo
+helm serve --repo-path .
+# helm serve --repo-path . --address "0.0.0.0:5000"
+helm repo index .
+
+helm repo update myrepo
+
+helm repo list
+helm repo add local http://127.0.0.1:8879/charts
+helm repo add myrepo http://ip:5000/charts
+helm search local/
+
+helm install --name my-nginx local/my-nginx
+
+
+##################################### Dynamic NFS Provisioning #########################################
+
+# refer nfs-provisioner folder
+kubectl create -f default-sc.yaml
+kubectl get storageclass
+
+kubectl create -f rbac.yaml
+kubectl create -f deployment.yaml
+
+kubectl create -f pvc-nfs1.yaml
+
+####################################### Jenkins using helm ###########################################

@@ -51,6 +51,7 @@ kubectl get all -n kube-system -o wide
 kubectl get --raw '/apis/'
 kubectl get --raw '/apis/metrics.k8s.io/'
 kubectl get pods --v=9
+kubectl get pods --v=6
 
 
 ################################   kubectl run pod/job/cronjob  ##########################
@@ -351,6 +352,8 @@ args:
 helm install metrics-server stable/metrics-server --namespace kube-system --values metrics-server.values
 
 kubectl get --raw "/apis/metrics.k8s.io/v1beta1/nodes"
+kubectl get --raw /apis/metrics.k8s.io/v1beta1/nodes/<NODE_NAME> | jq
+kubectl get --raw /apis/metrics.k8s.io/v1beta1/namespaces/<NAMESPACE>/pods/<POD_NAME> | jq
 
 kubectl top nodes
 kubectl top pods
@@ -583,4 +586,37 @@ kubectl create -f deployment.yaml
 
 kubectl create -f pvc-nfs1.yaml
 
-####################################### Jenkins using helm ###########################################
+####################################### Kube state metrics ############################################
+git clone https://github.com/kubernetes/kube-state-metrics.git
+cd kube-state-metrics
+kubectl apply -f examples/standard
+
+kubectl proxy
+
+curl localhost:8001/api/v1/namespaces/kube-system/services/kube-state-metrics:http-metrics/proxy/metrics
+
+curl http://localhost:8001/api/v1/namespaces/kube-system/services/kube-state-metrics:http-metrics/proxy/metrics | grep kube_node_status_capacity_cpu_cores
+
+############################################ Kube API #################################################
+kubectl proxy --accept-hosts=".*" --address="0.0.0.0"
+
+/api/ (the core APIs) --> core api group
+/apis/<api-group>/ (APIs grouped by API group) --> Ex: /apis/batch/v1/
+
+Namespaced:
+/api/v1/namespaces/<namespace-name>/<resource-type-name>/<resource-name>
+/apis/<api-group>/<api-version>/namespaces/<namespace-name>/<resource-type-name>/<resource-name>
+
+Non Namespaces:
+/api/v1/<resource-type-name>/<resource-name>
+/apis/<api-group>/<api-version>/<resource-type-name>/<resource-name>
+
+swagger:
+http://localhost:8001/openapi/v2
+
+/proxy, /exec, /attach, /logs --> streaming requests
+/api/v1/namespaces/default/pods/some-pod/logs
+
+?watch=true
+
+

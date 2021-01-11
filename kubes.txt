@@ -1,6 +1,6 @@
 ################################   kubectl basic commands  #######################################
 
-kubectl --version
+kubectl version
 kubectl version --short
 kubectl cluster-info
 

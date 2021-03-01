@@ -1,0 +1,90 @@
+# Basic commands
+
+docker version
+docker version --format '{{.Server.Version}}'
+docker version --format '{{json .}}'
+docker info
+docker ps
+docker ps -a
+docker stats
+docker stats --all
+docker events
+docker system df
+docker system prune -af # Removce images, networks, containers and volumes
+
+docker logs <container_id>
+docker inspect <container_id>
+docker stats <container_id>
+docker diff <container_id>
+
+# Docker container commands
+docker run hello-world
+docker run --rm <image-name>
+docker run -it -p 8000:8000 tensorflow/tensorflow
+docker container run --name web -p 5000:80 alpine:3.9
+docker run -it -c 512 agileek/cpuset-test
+docker run -it -m 300M ubuntu:14.04 /bin/bash
+docker container logs --tail 100 web
+docker run --name test -it nginx
+docker run -td <image-name>
+docker run -it -rm <image-name> /bin/bash
+docker exec -it <container name> /bin/sh
+
+
+docker start <container_id>
+docker stop <container_id>
+docker pause <continaer_id>
+docker unpause <continaer_id>
+docker restart <container_id>
+docker kill <container_id>
+docker rename <container-name> <new-container-name>
+docker container rm <container-name>
+docker rm $(docker ps -a -q)
+docker update --cpu-shares 256 -m 250M abebf7571666 hopeful_morse
+docker update --kernel-memory 70M test
+docker port nginx
+docker top nginx
+docker exec -d ubuntu_bash touch /tmp/execWorks
+
+docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $INSTANCE_ID
+
+docker cp [OPTIONS] CONTAINER:SRC_PATH DEST_PATH|-
+docker cp [OPTIONS] SRC_PATH|- CONTAINER:DEST_PATH
+
+docker export red_panda > latest.tar
+docker export --output="latest.tar" red_panda
+
+# Docker image commands
+docker login [OPTIONS] [SERVER]
+docker logout
+docker pull image-name
+docker build Dockerfile
+docker build -t myimage:1.0 .
+docker image rm alpine:3.4
+
+docker push dockerhubusername/imagename
+docker tag SOURCE_IMAGE[:TAG] TARGET_IMAGE[:TAG]
+docker commit container-name new-image-name
+docker save image-name > tarfile
+docker rmi image-name
+docker images
+docker history image-name
+
+# Docker Network commands
+docker network ls
+docker network inspect network-name
+docker network connect network-name container-name
+docker network disconnect network-name container-name
+docker network rm network-name
+
+# Docker Volume commands
+docker volume create volume-name
+docker volume list
+docker volume inspect volume-name
+docker volume rm volume-name
+
+
+
+
+
+
